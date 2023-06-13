@@ -5,118 +5,174 @@
 #include <stdbool.h>
 
 
-const int BOARD_ROWS = 3;
-const int BOARD_COLS = 3;
-int MOVES = BOARD_ROWS * BOARD_COLS;
+struct Config {
+  int ROWS;
+  int COLS;
+};
 
-char PLAYER_ONE = 'X';
-char PLAYER_TWO = 'O';
-int PLAYER_SELECTED = 1;
-
-int keyPressed;
-
-
-char board[3][3] = { 
-  {' ', ' ', ' '}, 
-  {' ', ' ', ' '}, 
-  {' ', ' ', ' '}
+struct Players {
+  char player1;
+  char player2;
+  int current;
 };
 
 
-void clear() {
+struct State {
+  char board[3][3];
+  int keyPressed;
+};
+
+
+struct Game {
+  struct Config config;
+  struct Players players;
+  struct State state;
+};
+
+
+void clear_screen() {
   system("cls");
 }
 
 
 
-void render(char board[3][3]) {
-  for(int i = 0; i < BOARD_ROWS; i ++)  {
-    for(int j = 0; j < BOARD_COLS; j++) {
-      printf("_%c_", board[i][j]);
-      if(j != BOARD_ROWS - 1)
-      {
-        printf("|");
-      }     
+void render(struct Game* game) {
+  for(int i = 0; i < game->config.ROWS; i ++)  {
+
+    for(int j = 0; j < game->config.COLS; j++) {
+
+     
+      if(game->state.keyPressed == 1) {
+        printf("> _%c_", game->state.board[i][j]);
+      }
+ 
+      if(game->state.keyPressed == 2) {
+        printf("> _%c_", game->state.board[i][j]);
+      }
+
+     if(game->state.keyPressed == 3) {
+        printf("> _%c_", game->state.board[i][j]);
+      }
+
+      printf("%d", game->state.keyPressed);
+
+     printf(" _%c_", game->state.board[i][j]);
+
+        if(j != game->config.COLS - 1)
+        {
+          printf("|");
+        }     
+    
     }
 
-    printf("\n");
+      printf("\n");
+    
   }
 }
 
 
-void showAvailablePlayers() {
-  clear();
+//baixo 80 
+//cima 72
+
+void gameControl(struct Game *game) {
+  render(game);
+  while(true) {
+
+      game->state.keyPressed = getch();
+    
+      if(game->state.keyPressed == 13) {
+          break;
+      }
+    printf("%d", game->state.keyPressed);
+      //
+    //  if(game->state.keyPressed == 72) {
+    //       game->players.current = game->players.current++;
+    // } 
+    //
+    //   if(game->state.keyPressed == 80) {
+    //       game->players.current = game->players.current--;
+    //   }
+    //
+    clear_screen();
+    render(game);
+
+  }
+
+    printf("%d", game->state.keyPressed);
+
+
+
+}
+
+
+
+
+void showPlayers(struct Game* game) {
+  clear_screen();
 
   printf("Choose one:\n");
-  printf("%c %c \n" , (PLAYER_SELECTED == 1 ? '>' : ' '), PLAYER_ONE);
-  printf("%c %c \n", (PLAYER_SELECTED== 2 ? '>' : ' '), PLAYER_TWO);
+  printf("%c %c \n" , (game->players.current == 1 ? '>' : ' '), game->players.player1);
+  printf("%c %c \n", (game->players.current == 2 ? '>' : ' '), game->players.player2);
 
 }
 
-void init() {
-  showAvailablePlayers();
 
 
-  while(true) {
-    keyPressed = getch();
+void init(struct Game* game) {
+
+    showPlayers(game);
+
+    while(true) {
+
+      game->state.keyPressed = getch();
     
-    if(keyPressed == 13) {
-      break;
-    } 
+      if(game->state.keyPressed == 13) {
+        
+          break;
+
+      } 
     
-    if(keyPressed == 72) {
-      PLAYER_SELECTED = PLAYER_SELECTED == 1 ? 2 : 1;
-    } 
+      if(game->state.keyPressed == 72) {
+      
+          game->players.current = game->players.current == 1 ? 2 : 1;
 
-    if(keyPressed == 80) {
-      PLAYER_SELECTED = PLAYER_SELECTED == 2 ? 1 : 2;
-    }
+      } 
 
-    showAvailablePlayers();
+      if(game->state.keyPressed == 80) {
+
+          game->players.current = game->players.current == 2 ? 1 : 2;
+
+      }
+
+
+      showPlayers(game);
 
   }
-
-
-  clear();
-
-  printf("%c" , PLAYER_SELECTED == 1 ? PLAYER_ONE : PLAYER_TWO);
-}
-
-
-
-
-
-void run() {
-  int row;
-  int col;
-
-  while(MOVES > 0) {
-
-
-    // remove this to make the same as the options
-    printf("Enter row position(only number): ");
-    scanf("%d", &row);
-
-
-    // remove this to make the same as the options
-    printf("Enter column position(only number): ");
-    scanf("%d", &col);
-    
-
-    if(board[row - 1][col - 1] == ' ') {
-      board[row - 1][col - 1] = PLAYER_SELECTED == 1 ? PLAYER_ONE : PLAYER_TWO;
-    }
-
-    clear();
-    render(board);
-
-    MOVES--;
-  }
+  clear_screen();
 
 }
+
+
+
+
 
 int main() {
-  init();
-  run();
+      struct Config config = { 3, 3 };
+      struct Players players = { 'X', 'O', 1};
+      struct State state = { 
+    { 
+      { ' ', ' ', ' '}, 
+      {' ', ' ', ' ' }, 
+      { ' ', ' ', ' '} 
+    },
+    0
+  };
+
+  struct Game game = { config, players, state};
+
+  init(&game);
+  gameControl(&game);
+  printf("%d", game.players.current);
+  // run();
   return 0;
 }
