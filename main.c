@@ -1,87 +1,84 @@
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
-#include "config.h"
-#include "render.h"
-#include <stdbool.h>
 
+#define COLS 3
+#define ROWS 3
 
 typedef struct Array {
   char board[3][3];
-} Game;
+} Board;
 
+Board create_game() {
+  Board game;
 
-Game create_game(int rows, int cols) {
-  Game game; 
-
-  for(int i = 0; i < rows; i++) {
-
-    for(int j = 0; j < cols; j++) {
-
+  for (int i = 0; i < ROWS; i++) {
+    for (int j = 0; j < COLS; j++) {
       game.board[i][j] = ' ';
-
     }
   }
 
   return game;
 }
 
-
-char player_select() {
-
+char select_player() {
   char choosed_player;
 
   printf("Choose you player (X or O): ");
   scanf("%c", &choosed_player);
-  
+
   return choosed_player;
 }
 
+void clear() { system("clear"); }
 
-void start_game(Game game, char player) {
-  int turn = 0;
-  int choosed_row;
-  int choosed_col;
+void render(Board game) {
+  for (int i = 0; i < ROWS; i++) {
+    if (i != 0) {
+      printf("----------\n");
+    }
+    for (int j = 0; j < COLS; j++) {
 
-  system("clear");
-  render(game.board);
-
-
-  while(true) {
-    
-
-    printf("Choose a row (1, 2, 3): ");
-    scanf("%d", &choosed_row);
-
-
-    printf("Choose a col(1, 2, 3): ");
-    scanf("%d", &choosed_col);
-
-
-    game.board[choosed_row - 1][choosed_col - 1] = turn ? 'O': player;
-
-
-    system("clear");
-    render(game.board);
-
-
-
-    turn = turn ? 0 : 1;
-
+      if (j != 2) {
+        printf("%c | ", game.board[i][j]);
+      }
+    }
+    printf("\n");
   }
-
-
 }
 
+void start_game(Board game, char player) {
+  int turn = 0;
+  int c_row;
+  int c_col;
 
+  clear();
+  render(game);
+
+  while (true) {
+
+    printf("Choose a row (1, 2, 3): ");
+    scanf("%d", &c_row);
+
+    printf("Choose a col(1, 2, 3): ");
+    scanf("%d", &c_col);
+
+    game.board[c_row - 1][c_col - 1] = turn ? 'O' : player;
+
+    clear();
+    render(game);
+
+    turn = turn ? 0 : 1;
+  }
+}
 
 int main(int argv, char **argc) {
 
-  Game game = create_game(ROWS, COLS);
+  Board game = create_game();
 
-  char player = player_select();
+  char player = select_player();
 
-  render(game.board);
+  render(game);
 
   start_game(game, player);
   return 0;
