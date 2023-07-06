@@ -1,36 +1,60 @@
+#include <curses.h>
+#include <ncurses.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 #define COLS 3
 #define ROWS 3
+#define getsy(n) ((n == 1) ? 'X' : 'O')
+
+int CURRENT_KEY = 0;
 
 typedef struct Array {
-  char board[3][3];
+  char board[ROWS][COLS];
 } Board;
 
-Board create_game() {
-  Board game;
+void set_key(int value) { CURRENT_KEY = value; }
 
-  for (int i = 0; i < ROWS; i++) {
-    for (int j = 0; j < COLS; j++) {
-      game.board[i][j] = ' ';
+void rscr() {
+  int DEFAULT;
+
+  DEFAULT = CURRENT_KEY == 1 ? 0 : 1;
+
+  printw("\n");
+  printw(" > %c \n", getsy(CURRENT_KEY));
+  printw("  %c", getsy(DEFAULT));
+}
+
+char get_player() {
+  int c;
+
+  printw("%s", "Choose your player");
+
+  while (1) {
+    c = getch();
+
+    clear();
+
+    switch (c) {
+    case KEY_UP:
+      set_key(0);
+      rscr();
+      break;
+    case KEY_DOWN:
+      set_key(1);
+      rscr();
+      break;
+    default:
+      clear();
+      printw("Not valid key");
     }
+
+    refresh();
   }
 
-  return game;
+  return c;
 }
-
-char select_player() {
-  char choosed_player;
-
-  printf("Choose you player (X or O): ");
-  scanf("%c", &choosed_player);
-
-  return choosed_player;
-}
-
-void clear() { system("clear"); }
 
 void render(Board game) {
   for (int i = 0; i < ROWS; i++) {
@@ -73,13 +97,8 @@ void start_game(Board game, char player) {
 }
 
 int main(int argv, char **argc) {
-
-  Board game = create_game();
-
-  char player = select_player();
-
-  render(game);
-
-  start_game(game, player);
+  initscr();
+  keypad(stdscr, TRUE);
+  get_player();
   return 0;
 }
