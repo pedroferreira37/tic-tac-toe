@@ -1,104 +1,137 @@
-#include <curses.h>
-#include <ncurses.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 #define COLS 3
 #define ROWS 3
-#define getsy(n) ((n == 1) ? 'X' : 'O')
 
-int CURRENT_KEY = 0;
+enum Player { PLAYER_X, PLAYER_O };
 
-typedef struct Array {
-  char board[ROWS][COLS];
-} Board;
+enum Player current_player;
 
-void set_key(int value) { CURRENT_KEY = value; }
+char board[3][3];
 
-void rscr() {
-  int DEFAULT;
-
-  DEFAULT = CURRENT_KEY == 1 ? 0 : 1;
-
-  printw("\n");
-  printw(" > %c \n", getsy(CURRENT_KEY));
-  printw("  %c", getsy(DEFAULT));
-}
-
-char get_player() {
-  int c;
-
-  printw("%s", "Choose your player");
-
-  while (1) {
-    c = getch();
-
-    clear();
-
-    switch (c) {
-    case KEY_UP:
-      set_key(0);
-      rscr();
-      break;
-    case KEY_DOWN:
-      set_key(1);
-      rscr();
-      break;
-    default:
-      clear();
-      printw("Not valid key");
+void initialize() {
+  for (int i = 0; i < ROWS; i++) {
+    for (int j = 0; j < COLS; j++) {
+      board[i][j] = ' ';
     }
-
-    refresh();
   }
-
-  return c;
 }
 
-void render(Board game) {
+void get_player() {
+  char player_choice;
+
+  do {
+    printf("Choose your player (X or O): ");
+
+    scanf(" %c", &player_choice);
+  } while (player_choice != 'X' && player_choice != 'O');
+
+  current_player = (player_choice == 'X') ? PLAYER_X : PLAYER_O;
+}
+
+void render() {
   for (int i = 0; i < ROWS; i++) {
     if (i != 0) {
       printf("----------\n");
     }
     for (int j = 0; j < COLS; j++) {
 
-      if (j != 2) {
-        printf("%c | ", game.board[i][j]);
+      if (j != 0) {
+        printf("| ");
       }
+      printf("%c ", board[i][j]);
     }
     printf("\n");
   }
 }
 
-void start_game(Board game, char player) {
-  int turn = 0;
-  int c_row;
-  int c_col;
+bool is_move_valid(int row, int col) {
+  return (row >= 0 && row < ROWS && col >= 0 && col < COLS &&
+          board[row][col] == ' ');
+}
+void make_move() {
+  int row, col;
 
-  clear();
-  render(game);
+  do {
+    printf("Choose a row (1-3): ");
+    scanf("%d", &row);
+    row--;
+
+    printf("Choose a column (1-3): ");
+    scanf("%d", &col);
+    col--;
+
+    if (!is_move_valid(row, col)) {
+      printf("Invalid move. Please try again.\n");
+    }
+  } while (!is_move_valid(row, col));
+
+  board[row][col] = (current_player == PLAYER_X) ? 'X' : 'O';
+}
+
+bool is_board_full() {
+  for (int i = 0; i < ROWS; i++) {
+    for (int j = 0; j < COLS; j++) {
+      if (board[i][j] == ' ') {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+bool has_won(enum Player player) {
+
+  for (int i = 0; i < ROWS; i++) {
+    if (board[i][0] == board[i][1] && board[i][0] == board[i][2] &&
+        board[i][0] != ' ') {
+      return true;
+    }
+  }
+
+  for (int j = 0; j < COLS; j++) {
+    if (board[0][j] == board[1][j] && board[0][j] == board[2][j] &&
+        board[0][j] != ' ') {
+      return true;
+    }
+  }
+
+  if (board[0][0] == board[1][1] && board[0][0] == board[2][2] &&
+      board[0][0] != ' ') {
+    return true;
+  }
+  if (board[0][2] == board[1][1] && board[0][2] == board[2][0] &&
+      board[0][2] != ' ') {
+    return true;
+  }
+
+  return false;
+}
+
+void run_game() {
+  initialize();
+  get_player();
 
   while (true) {
+    render();
+    make_move();
 
-    printf("Choose a row (1, 2, 3): ");
-    scanf("%d", &c_row);
+    if (has_won(current_player)) {
+      printf("Player %c has won!\n", (current_player == PLAYER_X) ? 'X' : 'O');
+      break;
+    } else if (is_board_full()) {
+      printf("It's a draw!\n");
+      break;
+    }
 
-    printf("Choose a col(1, 2, 3): ");
-    scanf("%d", &c_col);
-
-    game.board[c_row - 1][c_col - 1] = turn ? 'O' : player;
-
-    clear();
-    render(game);
-
-    turn = turn ? 0 : 1;
+    current_player = (current_player == PLAYER_X) ? PLAYER_O : PLAYER_X;
+    system("clear");
   }
 }
 
 int main(int argv, char **argc) {
-  initscr();
-  keypad(stdscr, TRUE);
-  get_player();
+  run_game();
   return 0;
 }
